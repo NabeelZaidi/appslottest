@@ -1,9 +1,9 @@
 name: Build and deploy Python app to Azure Web App
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 jobs:
@@ -23,15 +23,6 @@ jobs:
           python -m venv venv
           source venv/bin/activate
 
-      #- name: Cache dependencies
-      # uses: actions/cache@v2
-      #id: cache
-      #with:
-      # path: ~/.cache/pip
-      # key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-      #  restore_keys: |
-      #    ${{ runner.os }}-pip-
-
       - name: install dependencies if cache was not found
         #if: steps.cache.outputs.cache-hit != 'true'
         run: cd demo.code/ && pip install -r requirements.txt
@@ -44,33 +35,36 @@ jobs:
             ./demo.code 
             !venv/
 
-  deploy-to-stage-initial-slot:
+  deploy-to-pre-stage-slot:
     runs-on: ubuntu-latest
     needs: build
     environment:
       name: stage
-      url: "https://${{ vars.WEBAPP_NAME }}-${{ vars.SLOT_NAME_B }}.azurewebsites.net/"
+      url: "https://${{ vars.STAGE_WEBAPP_NAME }}-${{ vars.STAGE_SLOT_NAME_B }}.azurewebsites.net/"
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v3
         with:
           name: python-app
           path: .
-
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          #app-name: ${{ vars.WEBAPP_NAME }}
-          #slot-name: ${{ vars.SLOT_NAME_B }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          app-name: ${{ vars.STAGE_WEBAPP_NAME }}
+          slot-name: ${{ vars.STAGE_SLOT_NAME_B }}
+          # publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
 
   swap-stage-slot:
-    needs: deploy-to-stage-initial-slot
+    needs: deploy-to-pre-stage-slot
     runs-on: ubuntu-latest
     environment:
       name: stage
-      url: "https://${{ vars.WEBAPP_NAME }}.azurewebsites.net/"
+      url: "https://${{ vars.STAGE_WEBAPP_NAME }}.azurewebsites.net/"
     steps:
       - name: Log into Azure CLI with service principal
         uses: azure/login@v1.1
@@ -79,14 +73,14 @@ jobs:
 
       - name: Swap slots
         id: main-swap
-        run: az webapp deployment slot swap --resource-group ${{ vars.RESOURCE_GROUP }} --name ${{ vars.WEBAPP_NAME }} --slot ${{ vars.SLOT_NAME_B }} 
+        run: az webapp deployment slot swap --resource-group ${{ vars.STAGE_RESOURCE_GROUP }} --name ${{ vars.STAGE_WEBAPP_NAME }} --slot ${{ vars.STAGE_SLOT_NAME_B }} 
   
-  deploy-to-prod-initial-slot:
+  deploy-to-pre-prod-slot:
     runs-on: ubuntu-latest
     needs: swap-stage-slot
     environment:
       name: production
-      url: "https://${{ vars.WEBAPP_NAME }}-${{ vars.SLOT_NAME_B }}.azurewebsites.net/"
+      url: "https://${{ vars.PROD_WEBAPP_NAME }}-${{ vars.PROD_SLOT_NAME_B }}.azurewebsites.net/"
 
     steps:
       - name: Download artifact from build job
@@ -94,21 +88,24 @@ jobs:
         with:
           name: python-app
           path: .
-
+      - name: Log into Azure CLI with service principal
+        uses: azure/login@v1.1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         id: deploy-to-webapp
         with:
-          #app-name: ${{ vars.WEBAPP_NAME }}
-          #slot-name: ${{ vars.SLOT_NAME_B }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          app-name: ${{ vars.PROD_WEBAPP_NAME }}
+          slot-name: ${{ vars.PROD_SLOT_NAME_B }}
+          # publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
 
   test-with-prod-workload:
-    needs: deploy-to-prod-initial-slot
+    needs: deploy-to-pre-prod-slot
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: "https://${{ vars.WEBAPP_NAME }}-${{ vars.SLOT_NAME_B }}.azurewebsites.net/"
+      url: "https://${{ vars.PROD_WEBAPP_NAME }}-${{ vars.PROD_SLOT_NAME_B }}.azurewebsites.net/"
     steps:
       - name: Log into Azure CLI with service principal
         uses: azure/login@v1.1
@@ -117,7 +114,7 @@ jobs:
 
       - name: Traffic test slots
         id: trafic-test
-        run: az webapp traffic-routing set --distribution ${{ vars.SLOT_NAME_B }}=30 --name ${{ vars.WEBAPP_NAME }} -g ${{ vars.RESOURCE_GROUP }}
+        run: az webapp traffic-routing set --distribution ${{ vars.PROD_SLOT_NAME_B }}=30 --name ${{ vars.PROD_WEBAPP_NAME }} -g ${{ vars.PROD_RESOURCE_GROUP }}
 
       - name: ITSM Integration
         env:
@@ -133,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: Production
-      url: "https://${{ vars.WEBAPP_NAME }}.azurewebsites.net/"
+      url: "https://${{ vars.PROD_WEBAPP_NAME }}.azurewebsites.net/"
     steps:
     
       - name: Log into Azure CLI with service principal
@@ -143,4 +140,4 @@ jobs:
           
       - name: Swap slots
         id: main-swap
-        run: az webapp deployment slot swap --resource-group ${{ vars.RESOURCE_GROUP }} --name ${{ vars.WEBAPP_NAME }} --slot ${{ vars.SLOT_NAME_B }}
+        run: az webapp deployment slot swap --resource-group ${{ vars.PROD_RESOURCE_GROUP }} --name ${{ vars.PROD_WEBAPP_NAME }} --slot ${{ vars.PROD_SLOT_NAME_B }}

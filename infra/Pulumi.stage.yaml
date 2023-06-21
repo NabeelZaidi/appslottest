@@ -3,3 +3,4 @@ config:
   myapp:resourceGroupName: rg-stagnab
   myapp:appServicePlanName: asp-stag
   myapp:webAppName: webappnab-stag
+  myapp:slotName: prestageslot

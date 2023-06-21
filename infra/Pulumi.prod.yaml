@@ -3,3 +3,4 @@ config:
   myapp:resourceGroupName: rg-prodnab
   myapp:appServicePlanName: asp-prod
   myapp:webAppName: webappnab-prod
+  myapp:slotName: preprodslot

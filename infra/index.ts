@@ -7,6 +7,8 @@ const location = config.require("location")
 const resourceGroupName = configmyapp.require("resourceGroupName")
 const appServicePlanName = configmyapp.require("appServicePlanName")
 const webAppName = configmyapp.require("webAppName")
+const slotName = configmyapp.require("slotName")
+
 
 // resource group
 const resourceGroup = new azure.resources.ResourceGroup(resourceGroupName, {
@@ -45,9 +47,11 @@ const webApp = new azure.web.WebApp(webAppName, {
     }
 );
 
+
 // initial slot
 const slot = new azure.web.WebAppSlot("slot", {
     name: webApp.name,
+    slot: slotName,
     location: resourceGroup.location,
     serverFarmId: appServicePlan.id,
     resourceGroupName: resourceGroup.name,
