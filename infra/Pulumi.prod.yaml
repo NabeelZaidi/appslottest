@@ -1,0 +1,5 @@
+config:
+  azure-native:location: westus
+  myapp:resourceGroupName: rg-prodnab
+  myapp:appServicePlanName: asp-prod
+  myapp:webAppName: webappnab-prod

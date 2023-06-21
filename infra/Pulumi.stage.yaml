@@ -1,0 +1,5 @@
+config:
+  azure-native:location: westus
+  myapp:resourceGroupName: rg-stagnab
+  myapp:appServicePlanName: asp-stag
+  myapp:webAppName: webappnab-stag
