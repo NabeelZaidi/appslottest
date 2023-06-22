@@ -32,7 +32,7 @@ jobs:
   deploy-stage:
     if: ${{ github.ref == 'refs/heads/main' }}
     needs: build
-    uses: ./.github/workflows/destroytemplate.yml
+    uses: ./.github/workflows/destroy_template.yml
     with:
       RUNNER: "ubuntu-latest"
       ENVIRONMENT_NAME: stage
@@ -45,7 +45,7 @@ jobs:
       PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
   deploy-live:
-    uses: ./.github/workflows/destroytemplate.yml
+    uses: ./.github/workflows/destroy_template.yml
     needs: deploy-stage
     with:
       RUNNER: "ubuntu-latest"
