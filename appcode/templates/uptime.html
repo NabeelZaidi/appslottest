@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Uptime</title>
+    <script>
+        window.onload = function() {
+            var uptime = parseFloat("{{ uptime }}");
+            var display = document.querySelector('#time');
+
+            function timer() {
+                display.textContent = "Uptime: " + Math.floor(uptime) + "s";
+                uptime += 1;
+            }
+            // start the timer immediately and update it every second
+            timer();
+            setInterval(timer, 1000);
+        }
+    </script>
+</head>
+<body>
+    <h1><span id="time"></span></h1>
+</body>
+</html>
