@@ -38,9 +38,11 @@ const webApp = new azure.web.WebApp(webAppName, {
     name: webAppName,
     resourceGroupName: resourceGroup.name,
     location: resourceGroup.location,
+    reserved: true, // Set to true for Linux apps
     serverFarmId: appServicePlan.id,
     siteConfig: {
-        alwaysOn: true
+        alwaysOn: true,
+        linuxFxVersion: "PYTHON|3.11", // Change this to the desired Python version
     }
 },
     {
