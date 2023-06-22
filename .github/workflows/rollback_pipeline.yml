@@ -8,7 +8,7 @@ jobs:
   rollback-deployment:
     runs-on: ubuntu-latest
     environment:
-      name: "Production"
+      name: prod
       url: "https://${{ vars.WEBAPP_NAME }}.azurewebsites.net/"
     steps:
       - name: Log into Azure CLI with service principal
