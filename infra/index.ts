@@ -20,6 +20,7 @@ const resourceGroup = new azure.resources.ResourceGroup(resourceGroupName, {
 const appServicePlan = new azure.web.AppServicePlan(appServicePlanName, {
     name: appServicePlanName,
     kind: "Linux",
+    reserved: true, // Mark as a Linux plan
     resourceGroupName: resourceGroup.name,
     location: resourceGroup.location,
     sku: {
