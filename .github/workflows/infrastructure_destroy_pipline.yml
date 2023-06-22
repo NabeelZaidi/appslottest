@@ -1,4 +1,4 @@
-name: Deploy pulumi Infrastructure
+name: Destroy pulumi Infrastructure
 
 on:
   # push:
